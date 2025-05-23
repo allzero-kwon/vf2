@@ -94,8 +94,8 @@ class VF2 :
     def generate_candidate_pairs(self):
         # construct T1, T2    
         # 1. from T_out (not matched & out)
-        T1_out = [n for n in self.G1.nodes if n not in self.core_1 and self.out_1.get(n, 0) > 0]
-        T2_out = [n for n in self.G2.nodes if n not in self.core_2 and self.out_2.get(n, 0) > 0]
+        T1_out = [n for n in self.out_1.keys() if n not in self.core_1]
+        T2_out = [n for n in self.out_2.keys() if n not in self.core_2]
         
         if T1_out and T2_out:
             for n1 in T1_out:
@@ -104,8 +104,8 @@ class VF2 :
             return
 
         # 2. from T_in (not matched & in)
-        T1_in = [n for n in self.G1.nodes if n not in self.core_1 and self.in_1.get(n, 0) > 0]
-        T2_in = [n for n in self.G2.nodes if n not in self.core_2 and self.in_2.get(n, 0) > 0]
+        T1_in = [n for n in self.in_1.keys() if n not in self.core_1]
+        T2_in = [n for n in self.in_2.keys() if n not in self.core_2]
         if T1_in and T2_in:
             for n1 in T1_in:
                 for n2 in T2_in:
