@@ -3,8 +3,8 @@ class Node :
         #label, parent node, children
         self.index=index
         self.label=label
-        self.prev=None
-        self.next=[]
+        self.prev=set()
+        self.next=set()
 
 
 class Graph :
@@ -12,8 +12,8 @@ class Graph :
         self.root=Node(None, None)
         
     def insert(self, parent, child): #insert input child node to input parent node
-        parent.next.append(child)
-        child.prev=parent
+        parent.next.add(child)
+        child.prev.add(parent)
     def find(self, index):
         current=self.root
         visited=set()
@@ -32,7 +32,6 @@ class Graph :
                   if result is not None:
                       return result
         found_node=dfs(self, current, visited, index)
-        print(found_node)
         return found_node
     
     @property
@@ -49,10 +48,14 @@ def main():
     n2=Node(2, 'B')
     n3=Node(3, 'C')
     n4=Node(4, 'D')
+    n5=Node(5, 'E')
     g.insert(g.root, n1)
     g.insert(n1, n2)
     g.insert(n1, n3)
     g.insert(n2, n4)
-    index_4=g.find(4)
-    print(index_4.index, index_4. label)
+    # g.insert(n3, n4)
+    g.insert(n4, n5)
+    g.insert(n3, n5)
+    example_index=g.find(5)
+    print('index:', example_index.index, 'label: ',example_index. label)
 main()

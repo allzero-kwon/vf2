@@ -3,28 +3,40 @@
 from typing import *
 
 class Node :
-    def __init__(self, label) -> None:
+    def __init__(self, index, label) -> None:
         #label, parent node, children
-        # @TODO: id 필요 (label은 같을 수 있음, core1, cor2는 int만 저장한다고 논문에 기재되어있음ㅎㅎ)
+        self.index=index
         self.label=label
-        self.prev=None # @TODO: prev가 여러개면 어떻게 표현되나요? a->b a->c (아래 property 참고)
-        self.next=[]
-        
-    # @property
-    # def prev(self)->List[Node]:
-    #     pass
+        self.prev=set()
+        self.next=set()
 
-    # @property
-    # def next(self)->List[Node]:
-    #     pass
 
 class Graph :
     def __init__(self) -> None:
-        self.root=Node()
+        self.root=Node(None, None)
         
     def insert(self, parent, child): #insert input child node to input parent node
-        parent.next.append(child)
-        child.prev=parent
+        parent.next.add(child)
+        child.prev.add(parent)
+    def find(self, index):
+        current=self.root
+        visited=set()
+        def dfs(graph, start, visited, index): #find node with certain label using dfs
+          if start.index==index:
+              print('found node', index)
+              return start
+          # Mark the current node as visited
+          visited.add(start.index)
+          print(start.index)  # Process the node (e.g., print it)
+
+          # Recur for all the adjacent vertices
+          for neighbor in start.next:
+              if neighbor.index not in visited:
+                  result=dfs(graph, neighbor, visited, index)
+                  if result is not None:
+                      return result
+        found_node=dfs(self, current, visited, index)
+        return found_node
     
     @property
     def nodes(self):
