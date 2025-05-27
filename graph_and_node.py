@@ -6,14 +6,15 @@ class Node :
         self.prev=set()
         self.next=set()
 
-
 class Graph :
     def __init__(self) -> None:
-        self.root=Node(None, None)
+        self.root=Node(0, None)
+        self.nodes=0
         
     def insert(self, parent, child): #insert input child node to input parent node
         parent.next.add(child)
         child.prev.add(parent)
+        self.nodes=self.nodes+1
     def find(self, index):
         current=self.root
         visited=set()
@@ -23,7 +24,7 @@ class Graph :
               return start
           # Mark the current node as visited
           visited.add(start.index)
-          print(start.index)  # Process the node (e.g., print it)
+          print('at node', start.index)  # Process the node (e.g., print it)
 
           # Recur for all the adjacent vertices
           for neighbor in start.next:
@@ -34,28 +35,42 @@ class Graph :
         found_node=dfs(self, current, visited, index)
         return found_node
     
-    @property
-    def nodes(self):
-        # nodes list 반환
-        # ex. self.pattern_length = len(self.G2.nodes)
-        pass 
+def load_graph_from_txt(filepath):
+    graph = Graph()
+    node_list=[None]
+    f=open('input_g1.txt')
+    with open(filepath, 'r') as file:
+        mode='init'
+        prev_node_id=0
+        for line in file:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('#'): #change mode node/edge
+                if line[1]=='n':
+                    mode='node'
+                elif line[1]=='e':
+                    mode='edge'
+                    graph.insert(graph.root, node_list[1])
+                continue
+            parts = line.split()
+            if mode=='node': #in node mode, add new node to node list
+                node_id = int(parts[0])
+                label = parts[1]
+                if node_id!=prev_node_id+1: #check if node id increases by 1
+                    print('error node id at', node_id)
+                node_list.append(Node(node_id, label))
+                prev_node_id=node_id
+            elif mode=='edge': #in edge mode, add new edge to graph
+                v_i, v_j = int(parts[0]), int(parts[1])
+                graph.insert(node_list[v_i], node_list[v_j])
+    return graph
     
   
 def main():
-    #input to graph
-    g=Graph()
-    n1=Node(1, 'A')
-    n2=Node(2, 'B')
-    n3=Node(3, 'C')
-    n4=Node(4, 'D')
-    n5=Node(5, 'E')
-    g.insert(g.root, n1)
-    g.insert(n1, n2)
-    g.insert(n1, n3)
-    g.insert(n2, n4)
-    # g.insert(n3, n4)
-    g.insert(n4, n5)
-    g.insert(n3, n5)
-    example_index=g.find(5)
+    g1=load_graph_from_txt("input_g1.txt")
+    g2=load_graph_from_txt("input_g2.txt")
+    example_index=g1.find(5)
     print('index:', example_index.index, 'label: ',example_index. label)
+
 main()

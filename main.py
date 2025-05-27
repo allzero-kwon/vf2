@@ -1,5 +1,3 @@
-#shallowcoding
-
 from typing import *
 
 class Node :
@@ -10,14 +8,15 @@ class Node :
         self.prev=set()
         self.next=set()
 
-
 class Graph :
     def __init__(self) -> None:
         self.root=Node(None, None)
+        self.node_count=0
         
     def insert(self, parent, child): #insert input child node to input parent node
         parent.next.add(child)
         child.prev.add(parent)
+        self.node_count=self.node_count+1
     def find(self, index):
         current=self.root
         visited=set()
@@ -42,6 +41,7 @@ class Graph :
     def nodes(self):
         # nodes list 반환
         # ex. self.pattern_length = len(self.G2.nodes)
+        # def __init__에서 구현 완료
         pass 
     
     
@@ -62,7 +62,11 @@ class VF2 :
             self.t2_out = {}
             
             # in, out 객체   node id -> depth 저장! 
-            #Four vectors, in_1,out_1,in_2,out_2, whose dimen-sions are equal to the number of nodes in the correspond-ing graphs, describing the membership of the terminalsets. In particular, in_1[n] is nonzero if n is either in M1ðsÞor in Tin1ðsÞ; similar definitions hold for the other threevectors. The actual value stored in the vectors is the depthin the SSR tree of the state in which the node entered thecorresponding set
+            # Four vectors, in_1,out_1,in_2,out_2, whose dimensions are equal to the number of nodes in the
+            # corresponding graphs, describing the membership of the terminal sets. In particular, in_1[n]
+            # is nonzero if n is either in M1ðsÞor in Tin1ðsÞ; similar definitions hold for the other threevectors.
+            # The actual value stored in the vectors is the depthin the SSR tree of the state in which the node
+            # entered the corresponding set
             
             self.result = False # bool (isormorphic or not)
     
