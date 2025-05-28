@@ -9,8 +9,6 @@ class Node :
         self.next=set()
         
     def __repr__(self):
-        prev_ids = sorted(n.index for n in self.prev)
-        next_ids = sorted(n.index for n in self.next)
         return f'Node({self.index}, \'{self.label or ""}\')'
 
 class Graph :
