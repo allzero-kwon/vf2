@@ -6,5 +6,4 @@ v4 D
 
 #edges
 v1 v2
-v2 v3
-v2 v4
+v1 v3

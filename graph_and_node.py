@@ -53,12 +53,10 @@ class Graph :
                 return
             visited.add(node.index)
             nodes.append(node.index)
-            for neighbor in node.prev:
-                edges.append(f"({neighbor.index}->{node.index})")
-                dfs(neighbor)
             for neighbor in node.next:
-                edges.append(f"({node.index}->{neighbor.index})")
-                dfs(neighbor)
+                if node.index != 'root':
+                    edges.append(f"({node.index}->{neighbor.index})")
+                dfs(neighbor) 
 
         # 모든 노드에서 시작 → disconnected 포함
         all_nodes = set()
@@ -75,7 +73,8 @@ class Graph :
         for node in all_nodes:
             dfs(node)
 
-        node_list_str = ", ".join(map(str, sorted(nodes)))
+        nodes = sorted([n for n in nodes if n != 'root'])
+        node_list_str = ", ".join(map(str, nodes))
         edge_list_str = ", ".join(edges)
 
         return f"Graph(nodes=Nodes({node_list_str}), edges=Edges({edge_list_str}))"
