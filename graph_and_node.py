@@ -15,7 +15,8 @@ class Graph :
         parent.next.add(child)
         child.prev.add(parent)
         self.nodes=self.nodes+1
-    def find(self, index):
+
+    def find(self, index): #don't need this function. for checking Graph object. does not work for disconnected graph
         current=self.root
         visited=set()
         def dfs(graph, start, visited, index): #find node with certain label using dfs
@@ -38,7 +39,6 @@ class Graph :
 def load_graph_from_txt(filepath):
     graph = Graph()
     node_list=[None]
-    f=open('input_g1.txt')
     with open(filepath, 'r') as file:
         mode='init'
         prev_node_id=0
@@ -51,7 +51,7 @@ def load_graph_from_txt(filepath):
                     mode='node'
                 elif line[1]=='e':
                     mode='edge'
-                    graph.insert(graph.root, node_list[1])
+                    graph.insert(graph.root, node_list[1]) #when changing to edge mode, add node1 to graph.root
                 continue
             parts = line.split()
             if mode=='node': #in node mode, add new node to node list
