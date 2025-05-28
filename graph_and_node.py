@@ -1,3 +1,5 @@
+from typing import Union
+
 class Node :
     def __init__(self, index, label) -> None:
         #label, parent node, children
@@ -5,18 +7,23 @@ class Node :
         self.label=label
         self.prev=set()
         self.next=set()
+        
+    def __repr__(self):
+        prev_ids = sorted(n.index for n in self.prev)
+        next_ids = sorted(n.index for n in self.next)
+        return f'Node(index={self.index}, label=\'{self.label}\', prev=Nodes({prev_ids}), next=Nodes({next_ids}))'
 
 class Graph :
-    def __init__(self) -> None:
+    def __init__(self):
         self.root=Node(0, None)
         self.nodes=0
         
-    def insert(self, parent, child): #insert input child node to input parent node
+    def insert(self, parent, child) -> None: #insert input child node to input parent node
         parent.next.add(child)
         child.prev.add(parent)
         self.nodes=self.nodes+1
 
-    def find(self, index): #don't need this function. for checking Graph object. does not work for disconnected graph
+    def find(self, index) -> Union[None, Node]: #don't need this function. for checking Graph object. does not work for disconnected graph
         current=self.root
         visited=set()
         def dfs(graph, start, visited, index): #find node with certain label using dfs
@@ -35,6 +42,28 @@ class Graph :
                       return result
         found_node=dfs(self, current, visited, index)
         return found_node
+    
+    def __repr__(self):
+        # repr for debugging graph class 
+        nodes = []
+        edges = []
+        visited = set()
+
+        def dfs(node):
+            if node.index in visited:
+                return
+            visited.add(node.index)
+            nodes.append(node.index)
+            for neighbor in node.next:
+                edges.append(f"({node.index}->{neighbor.index})")
+                dfs(neighbor)
+
+        dfs(self.root)
+
+        node_list_str = ", ".join(map(str, sorted(nodes)))
+        edge_list_str = ", ".join(edges)
+
+        return f"Graph(nodes=Nodes({node_list_str}), edges=Edges({edge_list_str})"
     
 def load_graph_from_txt(filepath):
     graph = Graph()
@@ -66,11 +95,13 @@ def load_graph_from_txt(filepath):
                 graph.insert(node_list[v_i], node_list[v_j])
     return graph
     
-  
-def main():
+
+if __name__ == "__main__" : 
     g1=load_graph_from_txt("input_g1.txt")
     g2=load_graph_from_txt("input_g2.txt")
     example_index=g1.find(5)
-    print('index:', example_index.index, 'label: ',example_index. label)
-
-main()
+    assert example_index == None
+    
+    example_index=g1.find(2)
+    assert example_index is not None 
+    print(f'[TEST] index : {example_index.index} | label : {example_index.label}')
