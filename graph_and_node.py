@@ -20,6 +20,9 @@ class Graph :
         parent.next.add(child)
         child.prev.add(parent)
         self.n_nodes=self.n_nodes+1
+    def remove_from_root(self, node):
+        node.prev.remove(self.root)
+        self.root.next.remove(node)
 
     def find(self, index) -> Union[None, Node]: #don't need this function. for checking Graph object. does not work for disconnected graph
         current=self.root
@@ -80,6 +83,7 @@ class Graph :
 def load_graph_from_txt(filepath):
     graph = Graph()
     node_list={}
+    disconnected_heads=set()
     with open(filepath, 'r') as file:
         mode='init'
         for line in file:
@@ -92,8 +96,8 @@ def load_graph_from_txt(filepath):
                 elif line[1]=='e':
                     mode='edge'
                     # @TODO: disconnected graph 일 때는? 
-                    first_node = list(node_list.values())[0]
-                    graph.insert(graph.root, first_node) #when changing to edge mode, add node1 to graph.root
+                    # first_node = list(node_list.values())[0] #밑에 new_node 다 insert하는 걸로 바꿔서 삭제합니다
+                    # graph.insert(graph.root, first_node) #when changing to edge mode, add node1 to graph.root
                 continue
             parts = line.split()
             if mode=='node': #in node mode, add new node to node list
@@ -101,19 +105,39 @@ def load_graph_from_txt(filepath):
                 label = parts[1]
                 if node_id in node_list: 
                     raise ValueError(f'{node_id} has already inserted. Node ids of input should be different.')
-                node_list[node_id] = Node(node_id, label)
+                new_node=Node(node_id, label)
+                node_list[node_id] = new_node
+                disconnected_heads.add(node_id) #add node id to disconnected nodes list
+                graph.insert(graph.root, new_node) #add node to root node of graph(delete when connected to another node)
             elif mode=='edge': #in edge mode, add new edge to graph
-                v_i, v_j = parts[0], parts[1]
+                v_i, v_j = parts[0], parts[1] #v_i->v_j
                 graph.insert(node_list[v_i], node_list[v_j])
+                disconnected_heads.remove(v_j) #add node id to disconnected nodes list
+                graph.remove_from_root(node_list[v_j]) #add node to root node of graph(delete when connected to another node)
     return graph
     
 
 if __name__ == "__main__" : 
     g1=load_graph_from_txt("input_g1.txt")
     g2=load_graph_from_txt("input_g2.txt")
-    example_index=g1.find('u5')
+    example_index=g1.find('5')
     assert example_index == None
     
-    example_index=g1.find('u1')
+    example_index=g1.find('1')
     assert example_index is not None 
     print(f'[TEST] index : {example_index.index} | label : {example_index.label}')
+    # n1=Node(1, 'A')
+    # n2=Node(2, 'B')
+    # n3=Node(3, 'C')
+    # n4=Node(4, 'D')
+    # n5=Node(5, 'E')
+    # n6=Node(6, 'F')
+    # g1=Graph()
+    # g1.insert(g1.root, n1)
+    # g1.insert(n1, n2)
+    # g1.insert(n1, n3)
+    # g1.insert(n1, n4)
+    # g1.insert(g1.root, n2)
+    # print(g1.root.next)
+    # g1.remove_from_root(n2)
+    # print(g1.root.next)
