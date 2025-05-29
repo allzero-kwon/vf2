@@ -1,0 +1,13 @@
+#nodes
+u1 A
+u2 B
+u3 C
+u4 D
+u5 E
+
+#edges
+u1 u2
+u2 u3 
+u3 u4 
+u4 u1
+u5 u4

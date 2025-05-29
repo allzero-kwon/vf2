@@ -1,197 +1,186 @@
-#shallowcoding
-
 from typing import *
+from graph_and_node import Graph, Node, load_graph_from_txt
 
-class Node :
-    def __init__(self, index, label) -> None:
-        #label, parent node, children
-        self.index=index
-        self.label=label
-        self.prev=set()
-        self.next=set()
+class VF2State:
+    def __init__(self, G1: Graph, G2: Graph):
+        self.G1 = G1
+        self.G2 = G2
+        self.core_1 = {}  # G1 → G2
+        self.core_2 = {}  # G2 → G1
+        self.nodes_G1 = self._collect_nodes(G1.root)
+        self.nodes_G2 = self._collect_nodes(G2.root)
 
+        self.in_1 = set()
+        self.out_1 = set()
+        self.in_2 = set()
+        self.out_2 = set()
 
-class Graph :
-    def __init__(self) -> None:
-        self.root=Node(None, None)
+    def __repr__(self):
+        core = ', '.join(f'{n.index}->{m.index}' for n, m in self.core_1.items())
+        return f'VF2State(core: {{{core}}})'
+
+    def _collect_nodes(self, root):
+        visited, result = set(), []
+        def dfs(node):
+            if node in visited: return
+            visited.add(node)
+            if node.index != 'root':
+                result.append(node)
+            for nb in node.next | node.prev:
+                dfs(nb)
+        dfs(root)
+        return result
+
+    def update_frontiers(self):
+        self.in_1 = {n for n in self.nodes_G1 if n not in self.core_1 and any(nb in self.core_1 for nb in n.prev) and n.index != 'root'}
+        self.out_1 = {n for n in self.nodes_G1 if n not in self.core_1 and any(nb in self.core_1 for nb in n.next) and n.index != 'root'}
+        self.in_2 = {m for m in self.nodes_G2 if m not in self.core_2 and any(nb in self.core_2 for nb in m.prev) and m.index != 'root'}
+        self.out_2 = {m for m in self.nodes_G2 if m not in self.core_2 and any(nb in self.core_2 for nb in m.next) and m.index != 'root'}
+
+    def get_candidate_pairs(self):
+        self.update_frontiers()
+        if self.out_1 and self.out_2:
+            # print(f'candidates from T_out')
+            return [(n, m) for n in self.out_1 for m in self.out_2]
+        elif self.in_1 and self.in_2:
+            # print(f'candidates from T_in')
+            return [(n, m) for n in self.in_1 for m in self.in_2]
+        else:
+            # print(f'candidates from All pairs')
+            T1_rest = [n for n in self.nodes_G1 if n not in self.core_1 and n.index != 'root']
+            T2_rest = [m for m in self.nodes_G2 if m not in self.core_2 and m.index != 'root']
+            return [(n, m) for n in T1_rest for m in T2_rest]
+
+    def check_semantic(self, n, m):
+        return n.label == m.label
+
+    def is_feasible(self, n, m):
+        if n in self.core_1 or m in self.core_2:
+            return False
         
-    def insert(self, parent, child): #insert input child node to input parent node
-        parent.next.add(child)
-        child.prev.add(parent)
-    def find(self, index):
-        current=self.root
-        visited=set()
-        def dfs(graph, start, visited, index): #find node with certain label using dfs
-          if start.index==index:
-              print('found node', index)
-              return start
-          # Mark the current node as visited
-          visited.add(start.index)
-          print(start.index)  # Process the node (e.g., print it)
+        # R_pred
+        for n_pred in n.prev:
+            if n_pred in self.core_1:
+                if self.core_1[n_pred] not in m.prev:
+                    # print('R_pred out')
+                    return False
 
-          # Recur for all the adjacent vertices
-          for neighbor in start.next:
-              if neighbor.index not in visited:
-                  result=dfs(graph, neighbor, visited, index)
-                  if result is not None:
-                      return result
-        found_node=dfs(self, current, visited, index)
-        return found_node
-    
-    @property
-    def nodes(self):
-        # nodes list 반환
-        # ex. self.pattern_length = len(self.G2.nodes)
-        pass 
-    
-    
+        # R_succ
+        for n_succ in n.next:
+            if n_succ in self.core_1:
+                if self.core_1[n_succ] not in m.next:
+                    # print('R_succ out')
+                    return False
 
-class VF2 : 
-    
-    def __init__(self) -> None:
-        def __init__(self, G1:Graph, G2:Graph):
-            self.G1 = G1
-            self.G2 = G2 # pattern graph
-            self.pattern_length = len(self.G2.nodes) 
-            
-            self.core1 = {} # Matched G1 -> G2 
-            self.core2 = {} # Matched G2 -> G1 
-            self.t1_in = {}
-            self.t1_out = {}
-            self.t2_in = {}
-            self.t2_out = {}
-            
-            # in, out 객체   node id -> depth 저장! 
-            #Four vectors, in_1,out_1,in_2,out_2, whose dimen-sions are equal to the number of nodes in the correspond-ing graphs, describing the membership of the terminalsets. In particular, in_1[n] is nonzero if n is either in M1ðsÞor in Tin1ðsÞ; similar definitions hold for the other threevectors. The actual value stored in the vectors is the depthin the SSR tree of the state in which the node entered thecorresponding set
-            
-            self.result = False # bool (isormorphic or not)
-    
+        # R_in
+        in_n = sum(1 for u in n.prev if u not in self.core_1 and u in self.in_1)
+        in_m = sum(1 for v in m.prev if v not in self.core_2 and v in self.in_2)
+        if in_n > in_m:
+            # print('R_in out')
+            return False
+
+        # R_out
+        out_n = sum(1 for u in n.next if u not in self.core_1 and u in self.out_1)
+        out_m = sum(1 for v in m.next if v not in self.core_2 and v in self.out_2)
+        if out_n > out_m:
+            # print('R_out out')
+            return False
+
+        # R_new
+        new_n = sum(1 for u in n.prev | n.next if u not in self.core_1 and u not in self.in_1 and u not in self.out_1)
+        new_m = sum(1 for v in m.prev | m.next if v not in self.core_2 and v not in self.in_2 and v not in self.out_2)
+        if new_n > new_m:
+            # print('R_new out')
+            return False
+
+        if not self.check_semantic(n, m):
+            # print(f'Label out')
+            return False
+
+        return True
+
+    def add_pair(self, n, m):
+        self.core_1[n] = m
+        self.core_2[m] = n
+
+    def remove_pair(self, n, m):
+        del self.core_1[n]
+        del self.core_2[m]
         
-    @property
-    def matched_length(self):
-        assert len(list(self.core1.keys())) == len(list(self.core2.keys()))
-        return len(list(self.core1.keys()))
-    
-    def match(self):
-        self.match_dfs(1) 
-        print(f'Graph is {"isormorphic" if self.result else "non-isormorphic"}')
-    
-    def match_dfs(self, depth=1):
-        if self.matched_length == self.pattern_length:
-            self.result = True
+def match(G1: Graph, G2: Graph):
+    results = []
+
+    def recursive_match(state: VF2State):
+        if results:
             return True
-        
-        for n1, n2 in self.generate_candidate_pairs():
-            if self.check_feasibility(n1, n2):
-                self.add_matched_pair(n1, n2, depth)
-            if self.match_dfs(depth+1):
-                return True 
-            # not matched -> rollback
-            self.rollback(n1, n2, depth)
-            
-        return False 
-            
-    def generate_candidate_pairs(self):
-        # construct T1, T2    
-        # 1. from T_out (not matched & out)
-        T1_out = [n for n in self.out_1.keys() if n not in self.core_1]
-        T2_out = [n for n in self.out_2.keys() if n not in self.core_2]
-        
-        if T1_out and T2_out:
-            for n1 in T1_out:
-                for n2 in T2_out:
-                    yield n1, n2 # use generator to memory / time optimization (lazy 생성)
-            return
+        # print(len(state.core_1), len(state.nodes_G1))
+        if len(state.core_1) == len(state.nodes_G1):
+            results.append(dict(state.core_1))
+            return True
 
-        # 2. from T_in (not matched & in)
-        T1_in = [n for n in self.in_1.keys() if n not in self.core_1]
-        T2_in = [n for n in self.in_2.keys() if n not in self.core_2]
-        if T1_in and T2_in:
-            for n1 in T1_in:
-                for n2 in T2_in:
-                    yield n1, n2
-            return
-        
-        # 3. from all nodes (not matched, disconnected)
-        N1 = [n for n in self.G1.nodes if n not in self.core_1]
-        N2 = [n for n in self.G2.nodes if n not in self.core_2]
-        for n1 in N1:
-            for n2 in N2:
-                yield n1, n2
-    
-    def check_feasibility(self, n1, n2) -> bool : 
-        pass 
-    
-    def add_matched_pair(self, n1:Node, n2:Node, depth:int):
-        self.core1[n1.id] = n2.id
-        self.core2[n2.id] = n1.id
-        
-        # in,out 업데이트 
-        for child in n1.next:
-            cid = child.id
-            if cid not in self.core_1 and self.out_1.get(cid, 0) == 0:
-                self.out_1[cid] = depth
-        for prev in n1.prev:
-            pid = prev.id
-            if pid not in self.core_1 and self.in_1.get(pid, 0) == 0:
-                self.in_1[pid] = depth
 
-        for child in n2.next:
-            cid = child.id
-            if cid not in self.core_2 and self.out_2.get(cid, 0) == 0:
-                self.out_2[cid] = depth
-                
-        for prev in n2.prev:
-            pid = prev.id
-            if pid not in self.core_2 and self.in_2.get(pid, 0) == 0:
-                self.in_2[pid] = depth
+        for n, m in state.get_candidate_pairs():
+            # print(f'candidate pair: {n.index}, {m.index}')
+            if state.is_feasible(n, m):
+                state.add_pair(n, m)
+                if recursive_match(state):
+                    return True
+                # print(f'Rollback: {n.index}, {m.index}')
+                state.remove_pair(n, m)
 
-    
-    def rollback(self, n1, n2, depth):
-        # rollback 
-        # 1. matched pair에서 삭제 
-        del self.core_1[n1.id]
-        del self.core_2[n2.id]
-        
-        # 2. in/out에서 해당 실패한 depth의 item 지우기
-        # 여기 한번 실행해봐야함.. del 때문에 runtime error 날수도
-        for k,v in list(self.in_1.items()):
-            if v == depth : 
-                del self.in_1[k]          
-   
-        for k,v in list(self.out_1.items()):
-            if v == depth : 
-                del self.out_1[k]     
+        return False
 
-        for k, v in list(self.in_2.items()):
-            if v == depth:
-                del self.in_2[k]
-
-        for k, v in list(self.out_2.items()):
-            if v == depth:
-                del self.out_2[k]
-    
-    def check_Rpred(self, state) -> bool : 
-        pass 
-
-    def check_Rsucc(self, state) -> bool : 
-        pass 
-
-    def check_Rin(self, state) -> bool : 
-        pass 
-
-    def check_Rout(self, state) -> bool : 
-        pass 
-
-    def check_Rnew(self, state) -> bool : 
-        pass 
-
-    def check_Sem(self, state) -> bool :
-        pass 
-        
-def main():
-    #input to graph
-    pass
-
+    state = VF2State(G1, G2)
+    recursive_match(state)
+    return results
+ 
+         
 if __name__ == "__main__":
-    pass
+    print('------TC1--------')
+    g1=load_graph_from_txt("input_g1.txt")
+    g2=load_graph_from_txt("input_g2.txt")
+    print(f'Graph G1 : {g1}')
+    print(f'Graph G2 : {g2}')
+    vf2 = match(g1, g2)
+    print('matched : ',vf2)
+    
+    
+    print('------TC3 (negative)--------')
+    g1=load_graph_from_txt("test_inputs/g1_R_pred_negative.txt")
+    g2=load_graph_from_txt("test_inputs/g2_R_pred_negative.txt")
+    print(f'Graph G1 : {g1}')
+    print(f'Graph G2 : {g2}')
+    vf2 = match(g1, g2)
+    print('matched : ',vf2)
+    
+    # print('------TC4 (R_succ)--------')
+    # g1=load_graph_from_txt("test_inputs/g1_R_succ_negative.txt")
+    # g2=load_graph_from_txt("test_inputs/g2_R_succ_negative.txt")
+    # print(f'Graph G1 : {g1}')
+    # print(f'Graph G2 : {g2}')
+    # vf2 = match(g1, g2)
+    # print('matched : ',vf2)
+    
+    # print('------TC4 (R_in)--------')
+    # g1=load_graph_from_txt("test_inputs/g1_R_in_negative.txt")
+    # g2=load_graph_from_txt("test_inputs/g2_R_in_negative.txt")
+    # print(f'Graph G1 : {g1}')
+    # print(f'Graph G2 : {g2}')
+    # vf2 = match(g1, g2)
+    # print('matched : ',vf2)
+    
+    # print('------TC5 (R_out)--------')
+    # g1=load_graph_from_txt("test_inputs/g1_R_out_negative.txt")
+    # g2=load_graph_from_txt("test_inputs/g2_R_out_negative.txt")
+    # print(f'Graph G1 : {g1}')
+    # print(f'Graph G2 : {g2}')
+    # vf2 = match(g1, g2)
+    # print('matched : ',vf2)
+    
+    # print('------TC6 (R_new)--------')
+    # g1=load_graph_from_txt("test_inputs/g1_R_new_negative.txt")
+    # g2=load_graph_from_txt("test_inputs/g2_R_new_negative.txt")
+    # print(f'Graph G1 : {g1}')
+    # print(f'Graph G2 : {g2}')
+    # vf2 = match(g1, g2)
+    # print('matched : ',vf2)
