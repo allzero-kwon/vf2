@@ -25,7 +25,7 @@ class Graph :
         node.prev.remove(self.root)
         self.root.next.remove(node)
 
-    def find(self, index) -> Union[None, Node]: #don't need this function. for checking Graph object. does not work for disconnected graph
+    def find(self, index) -> Union[None, Node]: #don't need this function. for testing Graph object.
         current=self.root
         visited=set()
         def dfs(graph, start, visited, index): #find node with certain label using dfs
