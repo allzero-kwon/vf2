@@ -1,8 +1,0 @@
-#nodes
-u1 A
-u2 B
-u3 C
-
-#edges
-u1 u2   
-u1 u3
