@@ -20,6 +20,7 @@ class Graph :
         parent.next.add(child)
         child.prev.add(parent)
         self.n_nodes=self.n_nodes+1
+
     def remove_from_root(self, node):
         node.prev.remove(self.root)
         self.root.next.remove(node)
@@ -109,7 +110,7 @@ def load_graph_from_txt(filepath):
             elif mode=='edge': #in edge mode, add new edge to graph
                 v_i, v_j = parts[0], parts[1] #v_i->v_j
                 graph.insert(node_list[v_i], node_list[v_j])
-                if v_j in disconnected_heads:
+                if v_j in disconnected_heads and v_i in disconnected_heads:
                     disconnected_heads.remove(v_j) #add node id to disconnected nodes list
                     graph.remove_from_root(node_list[v_j]) #add node to root node of graph(delete when connected to another node)
     return graph
