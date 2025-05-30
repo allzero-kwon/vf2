@@ -97,4 +97,14 @@ def main(g1_input_path, g2_input_path, output_path):
     return 0
 
 if __name__ == "__main__":
-    main("input_g1.txt", "input_g2.txt", "output1.txt")
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('g1', type=str, help='g1 input txt file')
+    parser.add_argument('g2', type=str, help='g2 input txt file')
+    parser.add_argument('output', type=str, help='output txt file')
+    args = parser.parse_args()
+
+    g1_input = args.g1
+    g2_input = args.g2
+    output = args.output
+    main(g1_input, g2_input, output)

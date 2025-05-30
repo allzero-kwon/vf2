@@ -169,33 +169,15 @@ def main(input_g1_path, input_g2_path, output_path):
          
 if __name__ == "__main__":
     import argparse
-    import sys
-    import io
     parser = argparse.ArgumentParser()
     parser.add_argument('g1', type=str, help='g1 input txt file')
     parser.add_argument('g2', type=str, help='g2 input txt file')
     parser.add_argument('output', type=str, help='output txt file')
-    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
     parser.add_argument('--checker', action='store_true', help='Check output')
-    parser.add_argument('--test', type=int, default=None, help='Test mode (TC 1-5)')
     args = parser.parse_args()
-    
-    if not args.debug : 
-        # if not debug mode, ignore print output in stdout
-        sys.stdout = io.StringIO() 
-    
-    if args.test : 
-        tcs = {1:['tests/input_g1.txt', 'tests/input_g2.txt', 'output_1.txt'],
-               2:['tests/input2_g1.txt', 'tests/input2_g2.txt', 'output_2.txt'],
-               3:['tests/input3_g1.txt', 'tests/input3_g2.txt', 'output_3.txt'],}
-        test = tcs[args.test]
-        g1_input = test[0]
-        g2_input = test[1]
-        output = test[2]
-    else : 
-        g1_input = args.g1
-        g2_input = args.g2
-        output = args.output
+    g1_input = args.g1
+    g2_input = args.g2
+    output = args.output
     main(g1_input, g2_input, output)
     
     if args.checker : 
