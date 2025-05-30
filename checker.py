@@ -1,13 +1,18 @@
 def open_files(g1_filepath, g2_filepath, output):
     # 1. get result match as dictionary
     M={} #define match with dictionary. if node 1 in g1 corresponds to node3 in g2, M[1]=3
-    with open(output, 'r') as file:
-        for line in file:
+    
+    matched = None
+    with open(output, 'r') as f : 
+        lines = f.readlines()
+        matched = True if line[0].lower().strip() == 'true' else False 
+        for line in lines[1:]:
             line = line.strip()
             parts = line.split()
             g1_node=int(parts[0])
             g2_node=int(parts[1])
             M[g1_node]=g2_node
+
     # print(M)
     # 2. get g1 nodes and edges as dictionary
     g1_labels={}
@@ -55,7 +60,7 @@ def open_files(g1_filepath, g2_filepath, output):
             elif mode=='edge':
                 v_i, v_j=int(parts[0]), int(parts[1])
                 g2_edges[v_i].add(v_j)
-    return M, g1_labels, g1_edges, g2_labels, g2_edges
+    return matched, M, g1_labels, g1_edges, g2_labels, g2_edges
 
 def check_label(M, g1_labels, g2_labels):
     for g1_node in M.keys():
@@ -74,7 +79,7 @@ def check_children(M, g1_edges, g2_edges): #matched된 것만 확인하는 것�
     return True
 
 def main():
-    M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output1.txt")
+    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output1.txt")
     # print('g1 edges:', g1_edges)
     # print('g2 edges:', g2_edges)
     # print('g1 nodes:', g1_labels)

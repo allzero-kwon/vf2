@@ -62,39 +62,39 @@ class VF2State:
         for n_pred in n.prev:
             if n_pred in self.core_1:
                 if self.core_1[n_pred] not in m.prev:
-                    # print('R_pred out')
+                    print('R_pred out')
                     return False
 
         # R_succ
         for n_succ in n.next:
             if n_succ in self.core_1:
                 if self.core_1[n_succ] not in m.next:
-                    # print('R_succ out')
+                    print('R_succ out')
                     return False
 
         # R_in
         in_n = sum(1 for u in n.prev if u not in self.core_1 and u in self.in_1)
         in_m = sum(1 for v in m.prev if v not in self.core_2 and v in self.in_2)
         if in_n > in_m:
-            # print('R_in out')
+            print('R_in out')
             return False
 
         # R_out
         out_n = sum(1 for u in n.next if u not in self.core_1 and u in self.out_1)
         out_m = sum(1 for v in m.next if v not in self.core_2 and v in self.out_2)
         if out_n > out_m:
-            # print('R_out out')
+            print('R_out out')
             return False
 
         # R_new
         new_n = sum(1 for u in n.prev | n.next if u not in self.core_1 and u not in self.in_1 and u not in self.out_1)
         new_m = sum(1 for v in m.prev | m.next if v not in self.core_2 and v not in self.in_2 and v not in self.out_2)
         if new_n > new_m:
-            # print('R_new out')
+            print('R_new out')
             return False
 
         if not self.check_semantic(n, m):
-            # print(f'Label out')
+            print(f'Label out')
             return False
 
         return True
@@ -108,79 +108,89 @@ class VF2State:
         del self.core_2[m]
         
 def match(G1: Graph, G2: Graph):
-    results = []
+    """VF2 Match function
+    
+
+    Args:
+        G1 (Graph): g1 graph = pattern graph
+        G2 (Graph): g2 graph = target graph
+
+    Returns:
+        matching dict {g1 node : g2 node}
+    """
+    # results = []
 
     def recursive_match(state: VF2State):
-        if results:
-            return True
-        # print(len(state.core_1), len(state.nodes_G1))
         if len(state.core_1) == len(state.nodes_G1):
-            results.append(dict(state.core_1))
-            return True
-
+            return list(state.core_1.items())
 
         for n, m in state.get_candidate_pairs():
-            # print(f'candidate pair: {n.index}, {m.index}')
+            print(f'Candidate pair: {n.index}, {m.index}')
             if state.is_feasible(n, m):
                 state.add_pair(n, m)
-                if recursive_match(state):
-                    return True
-                # print(f'Rollback: {n.index}, {m.index}')
+                results = recursive_match(state)
+                if results : 
+                    return results
+                print(f'Rollback: {n.index}, {m.index}')
                 state.remove_pair(n, m)
 
-        return False
+        return results
 
     state = VF2State(G1, G2)
-    recursive_match(state)
+    results = recursive_match(state)
     return results
  
+ 
+def main(input_g1_path, input_g2_path, output_path):
+    """main function for VF2 
+
+    Args:
+        input_g1 (str): pattern graph file path
+        input_g2 (str): target graph file path
+        output (str): output file path 
+    """
+    g1=load_graph_from_txt(input_g1_path)
+    g2=load_graph_from_txt(input_g2_path)
+    
+    # validate input
+    if g1.n_nodes > g2.n_nodes : 
+        raise ValueError(
+            f"Pattern graph (g1) has more nodes ({g1.n_nodes}) than target graph (g2) ({g2.n_nodes}). Subgraph isomorphism is not possible."
+        )
+    
+    vf2 = match(g1, g2)
+   
+    print(vf2)
+    with open(output_path, 'w') as f :
+        f.write(f'{"True" if len(vf2) > 0 else "False"}')
+        for g1, g2 in vf2:
+            f.write(f'\n{g1.index} {g2.index}')
+
          
 if __name__ == "__main__":
-    print('------TC1--------')
-    g1=load_graph_from_txt("input_g1.txt")
-    g2=load_graph_from_txt("input_g2.txt")
-    print(f'Graph G1 : {g1}')
-    print(f'Graph G2 : {g2}')
-    vf2 = match(g1, g2)
-    print('matched : ',vf2)
+    import argparse
+    import sys
+    import io
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('g1', type=str, help='g1 input txt file')
+    # parser.add_argument('g2', type=str, help='g2 input txt file')
+    # parser.add_argument('output', type=str, help='output txt file')
+    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('--test', type=int, default=None, help='Test mode (TC 1-5)')
+    args = parser.parse_args()
     
+    if not args.debug : 
+        # if not debug mode, ignore print output in stdout
+        sys.stdout = io.StringIO() 
     
-    print('------TC3 (negative)--------')
-    g1=load_graph_from_txt("test_inputs/g1_R_pred_negative.txt")
-    g2=load_graph_from_txt("test_inputs/g2_R_pred_negative.txt")
-    print(f'Graph G1 : {g1}')
-    print(f'Graph G2 : {g2}')
-    vf2 = match(g1, g2)
-    print('matched : ',vf2)
-    
-    # print('------TC4 (R_succ)--------')
-    # g1=load_graph_from_txt("test_inputs/g1_R_succ_negative.txt")
-    # g2=load_graph_from_txt("test_inputs/g2_R_succ_negative.txt")
-    # print(f'Graph G1 : {g1}')
-    # print(f'Graph G2 : {g2}')
-    # vf2 = match(g1, g2)
-    # print('matched : ',vf2)
-    
-    # print('------TC4 (R_in)--------')
-    # g1=load_graph_from_txt("test_inputs/g1_R_in_negative.txt")
-    # g2=load_graph_from_txt("test_inputs/g2_R_in_negative.txt")
-    # print(f'Graph G1 : {g1}')
-    # print(f'Graph G2 : {g2}')
-    # vf2 = match(g1, g2)
-    # print('matched : ',vf2)
-    
-    # print('------TC5 (R_out)--------')
-    # g1=load_graph_from_txt("test_inputs/g1_R_out_negative.txt")
-    # g2=load_graph_from_txt("test_inputs/g2_R_out_negative.txt")
-    # print(f'Graph G1 : {g1}')
-    # print(f'Graph G2 : {g2}')
-    # vf2 = match(g1, g2)
-    # print('matched : ',vf2)
-    
-    # print('------TC6 (R_new)--------')
-    # g1=load_graph_from_txt("test_inputs/g1_R_new_negative.txt")
-    # g2=load_graph_from_txt("test_inputs/g2_R_new_negative.txt")
-    # print(f'Graph G1 : {g1}')
-    # print(f'Graph G2 : {g2}')
-    # vf2 = match(g1, g2)
-    # print('matched : ',vf2)
+    if args.test : 
+        tcs = {1:['tests/input_g1.txt', 'tests/input_g2.txt', 'output_1.txt'],
+               2:['tests/input2_g1.txt', 'tests/input2_g2.txt', 'output_2.txt'],}
+        test = tcs[args.test]
+        g1_input = test[0]
+        g2_input = test[1]
+        output = test[2]
+        main(g1_input, g2_input, output)
+    else : 
+        main(args.g1, args.g2, args.output)
+        

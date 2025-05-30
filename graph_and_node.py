@@ -95,9 +95,6 @@ def load_graph_from_txt(filepath):
                     mode='node'
                 elif line[1]=='e':
                     mode='edge'
-                    # @TODO: disconnected graph 일 때는? 
-                    # first_node = list(node_list.values())[0] #밑에 new_node 다 insert하는 걸로 바꿔서 삭제합니다
-                    # graph.insert(graph.root, first_node) #when changing to edge mode, add node1 to graph.root
                 continue
             parts = line.split()
             if mode=='node': #in node mode, add new node to node list
@@ -119,26 +116,11 @@ def load_graph_from_txt(filepath):
     
 
 if __name__ == "__main__" : 
-    g1=load_graph_from_txt("input_g1.txt")
-    g2=load_graph_from_txt("input_g2.txt")
+    g1=load_graph_from_txt("tests/input_g1.txt")
+    g2=load_graph_from_txt("tests/input_g2.txt")
     example_index=g1.find('5')
     assert example_index == None
     
     example_index=g1.find('1')
     assert example_index is not None 
     print(f'[TEST] index : {example_index.index} | label : {example_index.label}')
-    # n1=Node(1, 'A')
-    # n2=Node(2, 'B')
-    # n3=Node(3, 'C')
-    # n4=Node(4, 'D')
-    # n5=Node(5, 'E')
-    # n6=Node(6, 'F')
-    # g1=Graph()
-    # g1.insert(g1.root, n1)
-    # g1.insert(n1, n2)
-    # g1.insert(n1, n3)
-    # g1.insert(n1, n4)
-    # g1.insert(g1.root, n2)
-    # print(g1.root.next)
-    # g1.remove_from_root(n2)
-    # print(g1.root.next)

@@ -1,9 +1,0 @@
-#nodes
-v1 A
-v2 B
-v3 C
-v4 D
-
-#edges
-v1 v2
-v1 v3
