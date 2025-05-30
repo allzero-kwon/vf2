@@ -1,20 +1,7 @@
-def open_files(g1_filepath, g2_filepath, output):
-    # 1. get result match as dictionary
-    M={} #define match with dictionary. if node 1 in g1 corresponds to node3 in g2, M[1]=3
-    
-    matched = None
-    with open(output, 'r') as f : 
-        lines = f.readlines()
-        matched = True if line[0].lower().strip() == 'true' else False 
-        for line in lines[1:]:
-            line = line.strip()
-            parts = line.split()
-            g1_node=int(parts[0])
-            g2_node=int(parts[1])
-            M[g1_node]=g2_node
+from itertools import permutations
 
-    # print(M)
-    # 2. get g1 nodes and edges as dictionary
+def open_files(g1_filepath, g2_filepath, output):
+    # 1. get g1 nodes and edges as dictionary
     g1_labels={}
     g1_edges={}
     with open(g1_filepath, 'r') as file:
@@ -60,6 +47,25 @@ def open_files(g1_filepath, g2_filepath, output):
             elif mode=='edge':
                 v_i, v_j=int(parts[0]), int(parts[1])
                 g2_edges[v_i].add(v_j)
+
+    # 3. get result match as dictionary
+    M={} #define match with dictionary. if node 1 in g1 corresponds to node3 in g2, M[1]=3
+    
+    matched = None
+    with open(output, 'r') as f : 
+        lines = f.readlines()
+        matched = True if lines[0].lower().strip() == 'true' else False
+        if matched==False:
+
+            return matched, None, g1_labels, g1_edges, g2_labels, g2_edges
+        for line in lines[1:]:
+            line = line.strip()
+            parts = line.split()
+            g1_node=int(parts[0])
+            g2_node=int(parts[1])
+            M[g1_node]=g2_node
+
+    # print(M)
     return matched, M, g1_labels, g1_edges, g2_labels, g2_edges
 
 def check_label(M, g1_labels, g2_labels):
@@ -69,7 +75,7 @@ def check_label(M, g1_labels, g2_labels):
             return False
     return True
 
-def check_children(M, g1_edges, g2_edges): #matched된 것만 확인하는 것으로 바꿔야 함
+def check_children(M, g1_edges, g2_edges):
     for g1_node in M.keys():
         # print('checking children of', g1_node)
         g2_node=M[g1_node]
@@ -78,22 +84,41 @@ def check_children(M, g1_edges, g2_edges): #matched된 것만 확인하는 것�
             return False
     return True
 
+def check_false(g1_labels, g2_labels, g1_edges, g2_edges):
+    for n2_order in permutations(g2_labels.keys()):
+        M={}
+        for n1 in g1_labels:
+            M[n1]=n2_order[n1-1]
+        if check_true(M, g1_labels, g2_labels, g1_edges, g2_edges)=='correct: match!':
+            print('result wrong: match exists')
+            return -1
+    print('result correct: match does not exist')
+    return 0
+
+def check_true(M, g1_labels, g2_labels, g1_edges, g2_edges):
+    if len(M)!=len(g1_labels):
+        # print('not a match: match does not cover all nodes of g1')
+        return 'not a match: match does not cover all nodes of g1'
+    if not check_label(M, g1_labels, g2_labels):
+        # print('not a match: label different')
+        return 'not a match: label different'
+    if not check_children(M, g1_edges, g2_edges):
+        # print('not a match: children different')
+        return 'not a match: children different'
+    # print('match!')
+    return 'correct: match!'
+
 def main():
-    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output1.txt")
+    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output2.txt")
+    # print(matched)
+    if matched==True:
+        print(check_true(M, g1_labels, g2_labels, g1_edges, g2_edges))
+    else:
+        check_false(g1_labels, g2_labels, g1_edges, g2_edges)
+        
     # print('g1 edges:', g1_edges)
     # print('g2 edges:', g2_edges)
     # print('g1 nodes:', g1_labels)
     # print('g2 nodes:', g2_labels)
-    if len(M)!=len(g1_labels):
-        print('not a match: match does not cover all nodes of g1')
-        return -1
-    if not check_label(M, g1_labels, g2_labels):
-        print('not a match: label different')
-        return -1
-    if not check_children(M, g1_edges, g2_edges):
-        print('not a match: children different')
-        return -1
-    print('match!')
-    return 0
 
 main()
