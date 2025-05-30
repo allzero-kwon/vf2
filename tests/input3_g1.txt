@@ -1,0 +1,7 @@
+#nodes
+1 A
+2 B
+3 C
+
+#edges
+1 2

@@ -1,5 +1,6 @@
 from typing import *
 from graph_and_node import Graph, Node, load_graph_from_txt
+from checker import main as checker
 
 class VF2State:
     def __init__(self, G1: Graph, G2: Graph):
@@ -40,13 +41,10 @@ class VF2State:
     def get_candidate_pairs(self):
         self.update_frontiers()
         if self.out_1 and self.out_2:
-            # print(f'candidates from T_out')
             return [(n, m) for n in self.out_1 for m in self.out_2]
         elif self.in_1 and self.in_2:
-            # print(f'candidates from T_in')
             return [(n, m) for n in self.in_1 for m in self.in_2]
         else:
-            # print(f'candidates from All pairs')
             T1_rest = [n for n in self.nodes_G1 if n not in self.core_1 and n.index != 'root']
             T2_rest = [m for m in self.nodes_G2 if m not in self.core_2 and m.index != 'root']
             return [(n, m) for n in T1_rest for m in T2_rest]
@@ -62,7 +60,6 @@ class VF2State:
         for n_pred in n.prev:
             if n_pred in self.core_1:
                 if self.core_1[n_pred] not in m.prev:
-                    print('R_pred out')
                     return False
 
         # R_succ
@@ -151,7 +148,10 @@ def main(input_g1_path, input_g2_path, output_path):
     """
     g1=load_graph_from_txt(input_g1_path)
     g2=load_graph_from_txt(input_g2_path)
-    
+    import pdb 
+    pdb.set_trace()
+    print(g1)
+    print(g2)
     # validate input
     if g1.n_nodes > g2.n_nodes : 
         raise ValueError(
@@ -172,10 +172,11 @@ if __name__ == "__main__":
     import sys
     import io
     parser = argparse.ArgumentParser()
-    # parser.add_argument('g1', type=str, help='g1 input txt file')
-    # parser.add_argument('g2', type=str, help='g2 input txt file')
-    # parser.add_argument('output', type=str, help='output txt file')
+    parser.add_argument('g1', type=str, help='g1 input txt file')
+    parser.add_argument('g2', type=str, help='g2 input txt file')
+    parser.add_argument('output', type=str, help='output txt file')
     parser.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser.add_argument('--checker', action='store_true', help='Check output')
     parser.add_argument('--test', type=int, default=None, help='Test mode (TC 1-5)')
     args = parser.parse_args()
     
@@ -185,12 +186,17 @@ if __name__ == "__main__":
     
     if args.test : 
         tcs = {1:['tests/input_g1.txt', 'tests/input_g2.txt', 'output_1.txt'],
-               2:['tests/input2_g1.txt', 'tests/input2_g2.txt', 'output_2.txt'],}
+               2:['tests/input2_g1.txt', 'tests/input2_g2.txt', 'output_2.txt'],
+               3:['tests/input3_g1.txt', 'tests/input3_g2.txt', 'output_3.txt'],}
         test = tcs[args.test]
         g1_input = test[0]
         g2_input = test[1]
         output = test[2]
-        main(g1_input, g2_input, output)
     else : 
-        main(args.g1, args.g2, args.output)
-        
+        g1_input = args.g1
+        g2_input = args.g2
+        output = args.output
+    main(g1_input, g2_input, output)
+    
+    if args.checker : 
+        checker(g1_input, g2_input, output)
