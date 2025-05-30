@@ -71,39 +71,39 @@ class VF2State:
         for n_pred in n.prev:
             if n_pred in self.core_1:
                 if self.core_1[n_pred] not in m.prev:
-                    print(f'R_pred check failed')
+                    print(f'  R_pred check failed')
                     return False
 
         # R_succ : All matched successors of n must match successors of m
         for n_succ in n.next:
             if n_succ in self.core_1:
                 if self.core_1[n_succ] not in m.next:
-                    print(f'R_succ check failed')
+                    print(f'  R_succ check failed')
                     return False
 
         # R_in : Number of in-frontier neighbors must not exceed in G2
         in_n = sum(1 for u in n.prev if u not in self.core_1 and u in self.in_1)
         in_m = sum(1 for v in m.prev if v not in self.core_2 and v in self.in_2)
         if in_n > in_m:
-            print(f'R_in check failed {in_n} > {in_m}')
+            print(f'  R_in check failed {in_n} > {in_m}')
             return False
 
         # R_out : Number of out-frontier neighbors must not exceed in G2
         out_n = sum(1 for u in n.next if u not in self.core_1 and u in self.out_1)
         out_m = sum(1 for v in m.next if v not in self.core_2 and v in self.out_2)
         if out_n > out_m:
-            print(f'R_out check failed {out_n} > {out_m}')
+            print(f'  R_out check failed {out_n} > {out_m}')
             return False
 
         # R_new : Remaining unmapped neighbors must structurally match between n and m
         new_n = sum(1 for u in n.prev | n.next if u not in self.core_1 and u not in self.in_1 and u not in self.out_1)
         new_m = sum(1 for v in m.prev | m.next if v not in self.core_2 and v not in self.in_2 and v not in self.out_2)
         if new_n > new_m:
-            print(f'R_new check failed {new_n} > {new_m}')
+            print(f'  R_new check failed {new_n} > {new_m}')
             return False
 
         if not self.check_semantic(n, m):
-            print(f'Label (Semantic Attribute) check failed')
+            print(f'  Label (Semantic Attribute) check failed')
             return False
 
         return True
@@ -140,7 +140,7 @@ def match(G1: Graph, G2: Graph):
                 results = recursive_match(state)
                 if results : 
                     return results
-                print(f'Rollback: {n.index}, {m.index}')
+                # print(f'Rollback: {n.index}, {m.index}')
                 state.remove_pair(n, m)
 
         return []
@@ -160,10 +160,7 @@ def main(input_g1_path, input_g2_path, output_path):
     """
     g1=load_graph_from_txt(input_g1_path)
     g2=load_graph_from_txt(input_g2_path)
-    import pdb 
-    pdb.set_trace()
-    print(g1)
-    print(g2)
+    
     # validate input
     if g1.n_nodes > g2.n_nodes : 
         print(
