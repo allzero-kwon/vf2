@@ -5,7 +5,7 @@ def open_files(g1_filepath, g2_filepath, output):
     matched = None
     with open(output, 'r') as f : 
         lines = f.readlines()
-        matched = True if line[0].lower().strip() == 'true' else False 
+        matched = True if lines[0].lower().strip() == 'true' else False 
         for line in lines[1:]:
             line = line.strip()
             parts = line.split()
@@ -78,8 +78,8 @@ def check_children(M, g1_edges, g2_edges): #matched된 것만 확인하는 것�
             return False
     return True
 
-def main():
-    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output1.txt")
+def main(g1_input_path, g2_input_path, output_path):
+    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files(g1_input_path, g2_input_path, output_path)
     # print('g1 edges:', g1_edges)
     # print('g2 edges:', g2_edges)
     # print('g1 nodes:', g1_labels)
@@ -96,4 +96,5 @@ def main():
     print('match!')
     return 0
 
-main()
+if __name__ == "__main__":
+    main("input_g1.txt", "input_g2.txt", "output1.txt")
