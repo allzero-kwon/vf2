@@ -108,17 +108,23 @@ def check_true(M, g1_labels, g2_labels, g1_edges, g2_edges):
     # print('match!')
     return 'correct: match!'
 
-def main():
-    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files("input_g1.txt", "input_g2.txt", "output2.txt")
+def main(g1_input_path, g2_input_path, output_path):
+    matched, M, g1_labels, g1_edges, g2_labels, g2_edges=open_files(g1_input_path, g2_input_path, output_path)
     # print(matched)
     if matched==True:
         print(check_true(M, g1_labels, g2_labels, g1_edges, g2_edges))
     else:
         check_false(g1_labels, g2_labels, g1_edges, g2_edges)
-        
-    # print('g1 edges:', g1_edges)
-    # print('g2 edges:', g2_edges)
-    # print('g1 nodes:', g1_labels)
-    # print('g2 nodes:', g2_labels)
 
-main()
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('g1', type=str, help='g1 input txt file')
+    parser.add_argument('g2', type=str, help='g2 input txt file')
+    parser.add_argument('output', type=str, help='output txt file')
+    args = parser.parse_args()
+
+    g1_input = args.g1
+    g2_input = args.g2
+    output = args.output
+    main(g1_input, g2_input, output)

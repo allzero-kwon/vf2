@@ -1,5 +1,6 @@
 from typing import *
 from graph_and_node import Graph, Node, load_graph_from_txt
+from checker import main as checker
 
 class VF2State:
     def __init__(self, G1: Graph, G2: Graph):
@@ -40,13 +41,10 @@ class VF2State:
     def get_candidate_pairs(self):
         self.update_frontiers()
         if self.out_1 and self.out_2:
-            # print(f'candidates from T_out')
             return [(n, m) for n in self.out_1 for m in self.out_2]
         elif self.in_1 and self.in_2:
-            # print(f'candidates from T_in')
             return [(n, m) for n in self.in_1 for m in self.in_2]
         else:
-            # print(f'candidates from All pairs')
             T1_rest = [n for n in self.nodes_G1 if n not in self.core_1 and n.index != 'root']
             T2_rest = [m for m in self.nodes_G2 if m not in self.core_2 and m.index != 'root']
             return [(n, m) for n in T1_rest for m in T2_rest]
@@ -62,7 +60,6 @@ class VF2State:
         for n_pred in n.prev:
             if n_pred in self.core_1:
                 if self.core_1[n_pred] not in m.prev:
-                    print('R_pred out')
                     return False
 
         # R_succ
@@ -76,21 +73,21 @@ class VF2State:
         in_n = sum(1 for u in n.prev if u not in self.core_1 and u in self.in_1)
         in_m = sum(1 for v in m.prev if v not in self.core_2 and v in self.in_2)
         if in_n > in_m:
-            print('R_in out')
+            print(f'R_in out {in_n} > {in_m}')
             return False
 
         # R_out
         out_n = sum(1 for u in n.next if u not in self.core_1 and u in self.out_1)
         out_m = sum(1 for v in m.next if v not in self.core_2 and v in self.out_2)
         if out_n > out_m:
-            print('R_out out')
+            print(f'R_out out {out_n} > {out_m}')
             return False
 
         # R_new
         new_n = sum(1 for u in n.prev | n.next if u not in self.core_1 and u not in self.in_1 and u not in self.out_1)
         new_m = sum(1 for v in m.prev | m.next if v not in self.core_2 and v not in self.in_2 and v not in self.out_2)
         if new_n > new_m:
-            print('R_new out')
+            print(f'R_new out {new_n} > {new_m}')
             return False
 
         if not self.check_semantic(n, m):
@@ -134,7 +131,7 @@ def match(G1: Graph, G2: Graph):
                 print(f'Rollback: {n.index}, {m.index}')
                 state.remove_pair(n, m)
 
-        return results
+        return []
 
     state = VF2State(G1, G2)
     results = recursive_match(state)
@@ -151,14 +148,18 @@ def main(input_g1_path, input_g2_path, output_path):
     """
     g1=load_graph_from_txt(input_g1_path)
     g2=load_graph_from_txt(input_g2_path)
-    
+    import pdb 
+    pdb.set_trace()
+    print(g1)
+    print(g2)
     # validate input
     if g1.n_nodes > g2.n_nodes : 
-        raise ValueError(
-            f"Pattern graph (g1) has more nodes ({g1.n_nodes}) than target graph (g2) ({g2.n_nodes}). Subgraph isomorphism is not possible."
+        print(
+            f"Pattern graph (g1) has more nodes ({g1.n_nodes}) than target graph (g2) ({g2.n_nodes}). Subgraph isomorphism is not possible. Isomorphism result is False"
         )
-    
-    vf2 = match(g1, g2)
+        vf2 = []
+    else : 
+        vf2 = match(g1, g2)
    
     print(vf2)
     with open(output_path, 'w') as f :
@@ -169,28 +170,16 @@ def main(input_g1_path, input_g2_path, output_path):
          
 if __name__ == "__main__":
     import argparse
-    import sys
-    import io
     parser = argparse.ArgumentParser()
-    # parser.add_argument('g1', type=str, help='g1 input txt file')
-    # parser.add_argument('g2', type=str, help='g2 input txt file')
-    # parser.add_argument('output', type=str, help='output txt file')
-    parser.add_argument('--debug', action='store_true', help='Enable debug mode')
-    parser.add_argument('--test', type=int, default=None, help='Test mode (TC 1-5)')
+    parser.add_argument('g1', type=str, help='g1 input txt file')
+    parser.add_argument('g2', type=str, help='g2 input txt file')
+    parser.add_argument('output', type=str, help='output txt file')
+    parser.add_argument('--checker', action='store_true', help='Check output')
     args = parser.parse_args()
+    g1_input = args.g1
+    g2_input = args.g2
+    output = args.output
+    main(g1_input, g2_input, output)
     
-    if not args.debug : 
-        # if not debug mode, ignore print output in stdout
-        sys.stdout = io.StringIO() 
-    
-    if args.test : 
-        tcs = {1:['tests/input_g1.txt', 'tests/input_g2.txt', 'output_1.txt'],
-               2:['tests/input2_g1.txt', 'tests/input2_g2.txt', 'output_2.txt'],}
-        test = tcs[args.test]
-        g1_input = test[0]
-        g2_input = test[1]
-        output = test[2]
-        main(g1_input, g2_input, output)
-    else : 
-        main(args.g1, args.g2, args.output)
-        
+    if args.checker : 
+        checker(g1_input, g2_input, output)
