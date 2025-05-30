@@ -1,0 +1,1 @@
+python3 main.py tests/input_g1.txt tests/input_g2.txt output_1.txt
