@@ -154,11 +154,12 @@ def main(input_g1_path, input_g2_path, output_path):
     print(g2)
     # validate input
     if g1.n_nodes > g2.n_nodes : 
-        raise ValueError(
-            f"Pattern graph (g1) has more nodes ({g1.n_nodes}) than target graph (g2) ({g2.n_nodes}). Subgraph isomorphism is not possible."
+        print(
+            f"Pattern graph (g1) has more nodes ({g1.n_nodes}) than target graph (g2) ({g2.n_nodes}). Subgraph isomorphism is not possible. Isomorphism result is False"
         )
-    
-    vf2 = match(g1, g2)
+        vf2 = []
+    else : 
+        vf2 = match(g1, g2)
    
     print(vf2)
     with open(output_path, 'w') as f :
