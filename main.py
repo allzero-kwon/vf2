@@ -33,12 +33,23 @@ class VF2State:
         return result
 
     def update_frontiers(self):
+        """ T in/out update 
+            T out : the sets of nodes, not yet in the partial mapping, that are the destination of branches starting from G1, G2
+            T_in : the sets of nodes, not yet in the partial mapping,  that are the origin of branches ending into G1,G2
+        """
         self.in_1 = {n for n in self.nodes_G1 if n not in self.core_1 and any(nb in self.core_1 for nb in n.prev) and n.index != 'root'}
         self.out_1 = {n for n in self.nodes_G1 if n not in self.core_1 and any(nb in self.core_1 for nb in n.next) and n.index != 'root'}
         self.in_2 = {m for m in self.nodes_G2 if m not in self.core_2 and any(nb in self.core_2 for nb in m.prev) and m.index != 'root'}
         self.out_2 = {m for m in self.nodes_G2 if m not in self.core_2 and any(nb in self.core_2 for nb in m.next) and m.index != 'root'}
 
     def get_candidate_pairs(self):
+        """Get Candidate pairs 
+        - If T_out 1,2 are empty, then consider T_in. 
+        - If T_out, in are empty (Disconnected Graph or Init graph), use all the pairs of nodes not contained neither in G1, G2.
+
+        Returns:
+            pairs (List[tuple]): list of pairs (Node from G1, Node from G2)
+        """
         self.update_frontiers()
         if self.out_1 and self.out_2:
             return [(n, m) for n in self.out_1 for m in self.out_2]
@@ -56,42 +67,43 @@ class VF2State:
         if n in self.core_1 or m in self.core_2:
             return False
         
-        # R_pred
+        # R_pred : All matched predecessors of n must match predecessors of m
         for n_pred in n.prev:
             if n_pred in self.core_1:
                 if self.core_1[n_pred] not in m.prev:
+                    print(f'R_pred check failed')
                     return False
 
-        # R_succ
+        # R_succ : All matched successors of n must match successors of m
         for n_succ in n.next:
             if n_succ in self.core_1:
                 if self.core_1[n_succ] not in m.next:
-                    print('R_succ out')
+                    print(f'R_succ check failed')
                     return False
 
-        # R_in
+        # R_in : Number of in-frontier neighbors must not exceed in G2
         in_n = sum(1 for u in n.prev if u not in self.core_1 and u in self.in_1)
         in_m = sum(1 for v in m.prev if v not in self.core_2 and v in self.in_2)
         if in_n > in_m:
-            print(f'R_in out {in_n} > {in_m}')
+            print(f'R_in check failed {in_n} > {in_m}')
             return False
 
-        # R_out
+        # R_out : Number of out-frontier neighbors must not exceed in G2
         out_n = sum(1 for u in n.next if u not in self.core_1 and u in self.out_1)
         out_m = sum(1 for v in m.next if v not in self.core_2 and v in self.out_2)
         if out_n > out_m:
-            print(f'R_out out {out_n} > {out_m}')
+            print(f'R_out check failed {out_n} > {out_m}')
             return False
 
-        # R_new
+        # R_new : Remaining unmapped neighbors must structurally match between n and m
         new_n = sum(1 for u in n.prev | n.next if u not in self.core_1 and u not in self.in_1 and u not in self.out_1)
         new_m = sum(1 for v in m.prev | m.next if v not in self.core_2 and v not in self.in_2 and v not in self.out_2)
         if new_n > new_m:
-            print(f'R_new out {new_n} > {new_m}')
+            print(f'R_new check failed {new_n} > {new_m}')
             return False
 
         if not self.check_semantic(n, m):
-            print(f'Label out')
+            print(f'Label (Semantic Attribute) check failed')
             return False
 
         return True
@@ -170,12 +182,19 @@ def main(input_g1_path, input_g2_path, output_path):
          
 if __name__ == "__main__":
     import argparse
+    import sys 
+    import io
     parser = argparse.ArgumentParser()
     parser.add_argument('g1', type=str, help='g1 input txt file')
     parser.add_argument('g2', type=str, help='g2 input txt file')
     parser.add_argument('output', type=str, help='output txt file')
+    parser.add_argument('--debug', action='store_true', help='Debugging Mode')
     parser.add_argument('--checker', action='store_true', help='Check output')
     args = parser.parse_args()
+    
+    if not args.debug : 
+        sys.stdout = io.StringIO()
+    
     g1_input = args.g1
     g2_input = args.g2
     output = args.output
